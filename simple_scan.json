@@ -1,0 +1,62 @@
+﻿[
+    {
+        "Folder":  "Download",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (25 files)"
+    },
+    {
+        "Folder":  ".trash-storage",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (0 files)"
+    },
+    {
+        "Folder":  ".esharecache",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (0 files)"
+    },
+    {
+        "Folder":  ".esharelog",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (1 files)"
+    },
+    {
+        "Folder":  "SHAREit",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (1 files)"
+    },
+    {
+        "Folder":  "DCIM",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (6 files)"
+    },
+    {
+        "Folder":  "Movies",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (10 files)"
+    },
+    {
+        "Folder":  "Pictures",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (103 files)"
+    },
+    {
+        "Folder":  "Music",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (0 files)"
+    },
+    {
+        "Folder":  "Documents",
+        "FileName":  "(Summary)",
+        "SizeMB":  0,
+        "Type":  "Folder Root Files (0 files)"
+    }
+]
