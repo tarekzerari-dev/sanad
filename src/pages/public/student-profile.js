@@ -1,6 +1,6 @@
-// ============================
-// Student Profile Page (Public)
-// ============================
+// ============================================================
+// سند — Student Educational Profile (الملف التربوي والقرآني للطالب)
+// ============================================================
 
 import { getStudent, getStudentAttendanceStats, getCompetitions, getStudentPoints } from '../../data/store.js';
 import { renderNavbar, initNavbar } from '../../components/navbar.js';
@@ -17,11 +17,11 @@ export function renderStudentProfilePage(params) {
       ${renderNavbar()}
       <main class="section">
         <div class="container">
-          <div class="empty-state">
+          <div class="empty-state" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg);">
             <div class="empty-icon"><i data-lucide="user-x"></i></div>
-            <h3>الطالب غير موجود</h3>
-            <p>لم يتم العثور على الطالب المطلوب</p>
-            <a href="#/students" class="btn btn-primary" style="margin-top: var(--space-6);">العودة للطلبة</a>
+            <h3>السجل غير موجود</h3>
+            <p>لم يتم العثور على سجل الطالب المطلوب في قاعدة بيانات المدرسة.</p>
+            <a href="#/students" class="btn btn-primary" style="margin-top: var(--space-4);">العودة لقائمة الطلبة</a>
           </div>
         </div>
       </main>
@@ -38,154 +38,219 @@ export function renderStudentProfilePage(params) {
   const badgeClass = getLevelBadgeClass(student.level);
   const pointsData = getStudentPoints(student.id);
   
-  // Get competitions this student participated in
+  // Competitions
   const allCompetitions = getCompetitions();
   const studentCompetitions = allCompetitions.filter(c => 
     c.participants && c.participants.includes(student.id)
   );
 
-  // Get memorization entries sorted by date
+  // Memorization history
   const memEntries = [...(student.memorization || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
   const lastEntry = memEntries[0];
 
   app.innerHTML = `
     ${renderNavbar()}
     
-    <main>
-      <!-- Profile Header -->
-      <div class="profile-header pattern-bg">
-        <div style="position: relative; z-index: 1; text-align: center;">
-          <a href="#/students" class="back-btn" style="color: rgba(255,255,255,0.8); position: absolute; top: -40px; right: 20px;">
-            <i data-lucide="arrow-right"></i>
-            العودة
-          </a>
-          <div class="profile-avatar avatar avatar-xl" style="margin: 0 auto var(--space-5); border-color: rgba(255,255,255,0.3);">
-            ${renderAvatar(student.avatar, '').replace('<div class="avatar ">', '').replace('</div>', '')}
+    <main style="background: var(--bg-canvas); padding-bottom: var(--space-16);">
+      
+      <!-- Serene Profile Header Banner -->
+      <div style="background: linear-gradient(145deg, #0d2315 0%, #1a4d2e 60%, #22633c 100%); color: #ffffff; padding: var(--space-12) 0 var(--space-16); position: relative; border-bottom: 2px solid var(--brass-400);">
+        <div class="container" style="position: relative; z-index: 1;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+            <a href="#/students" class="btn btn-ghost btn-sm" style="color: #ffffff; background: rgba(255, 255, 255, 0.12); border-radius: var(--border-radius-full);">
+              <i data-lucide="arrow-right"></i>
+              <span>العودة لقائمة الطلبة</span>
+            </a>
+            <span style="font-size: 11px; color: var(--brass-200); font-weight: 600;">
+              تاريخ التسجيل: ${student.registrationDate || '—'}
+            </span>
           </div>
-          <h1 class="profile-name">${student.firstName} ${student.lastName}</h1>
-          <div class="profile-meta">
-            <span><i data-lucide="calendar"></i> ${student.age} سنوات</span>
-            <span><i data-lucide="user"></i> ${student.gender === 'ذكر' ? 'ولد' : 'بنت'}</span>
-            <span class="badge ${badgeClass}" style="font-size: var(--font-size-xs);">${student.level}</span>
-            <span><i data-lucide="users"></i> ${student.group}</span>
+
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <div style="width: 104px; height: 104px; border-radius: var(--border-radius-full); border: 3px solid var(--brass-400); padding: 4px; background: #ffffff; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); margin-bottom: var(--space-4); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              ${renderAvatar(student.avatar, 'avatar-xl')}
+            </div>
+
+            <h1 class="profile-name">
+              ${student.firstName} ${student.lastName}
+            </h1>
+
+            <div class="profile-meta">
+              <span><i data-lucide="calendar"></i> ${student.age} سنوات</span>
+              <span>•</span>
+              <span><i data-lucide="user"></i> ${student.gender === 'ذكر' ? 'ولد' : 'بنت'}</span>
+              <span>•</span>
+              <span class="badge ${badgeClass}">${student.level}</span>
+              <span>•</span>
+              <span class="badge" style="background: rgba(255,255,255,0.15); color: #ffffff;">${student.group}</span>
+            </div>
           </div>
+
         </div>
       </div>
 
-      <!-- Profile Body -->
-      <div class="profile-body">
-        <!-- Stats Row -->
-        <div class="stats-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); margin-bottom: var(--space-8);">
+      <!-- Main Dossier Workplace -->
+      <div class="container" style="margin-top: calc(var(--space-8) * -1); position: relative; z-index: 2;">
+        
+        <!-- Top 4 Summary Cards -->
+        <div class="stats-grid" style="margin-bottom: var(--space-6);">
           <div class="stat-card">
             <div class="stat-icon green"><i data-lucide="book-open"></i></div>
             <div class="stat-info">
-              <h3>التقدم في الحفظ</h3>
-              <div class="stat-value">${progress}%</div>
+              <h3>إنجاز سورة الملك</h3>
+              <div class="stat-value" style="color: var(--emerald-800);">${progress}%</div>
             </div>
           </div>
+
           <div class="stat-card">
-            <div class="stat-icon" style="background: #fffbeb; color: var(--warning);"><i data-lucide="star"></i></div>
+            <div class="stat-icon gold"><i data-lucide="star"></i></div>
             <div class="stat-info">
-              <h3>النقاط</h3>
-              <div class="stat-value" style="color: ${pointsData.total > 0 ? 'var(--green-500)' : (pointsData.total < 0 ? 'var(--danger)' : 'var(--text-primary)')}">${pointsData.total}</div>
+              <h3>نقاط التميز</h3>
+              <div class="stat-value" style="color: ${pointsData.total > 0 ? 'var(--brass-700)' : 'var(--text-primary)'};">${pointsData.total || 0}</div>
             </div>
           </div>
+
           <div class="stat-card">
-            <div class="stat-icon blue"><i data-lucide="hash"></i></div>
+            <div class="stat-icon green" style="background: #eaf6ee; color: var(--success);"><i data-lucide="calendar-check"></i></div>
             <div class="stat-info">
-              <h3>الآيات المحفوظة</h3>
-              <div class="stat-value">${memorizedVerses}</div>
+              <h3>نسبة المواظبة</h3>
+              <div class="stat-value" style="color: var(--success);">${attStats.percentage}%</div>
             </div>
           </div>
+
           <div class="stat-card">
-            <div class="stat-icon" style="background: #ecfdf5; color: var(--green-600);"><i data-lucide="calendar-check"></i></div>
-            <div class="stat-info">
-              <h3>الحضور</h3>
-              <div class="stat-value" style="color: ${attStats.percentage >= 90 ? 'var(--green-500)' : attStats.percentage >= 75 ? 'var(--gold-500)' : 'var(--danger)'}">${attStats.percentage}%</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon gold"><i data-lucide="trophy"></i></div>
+            <div class="stat-icon blue"><i data-lucide="trophy"></i></div>
             <div class="stat-info">
               <h3>المسابقات</h3>
-              <div class="stat-value">${studentCompetitions.length}</div>
+              <div class="stat-value" style="color: var(--info);">${studentCompetitions.length}</div>
             </div>
           </div>
         </div>
 
-        <div class="profile-grid">
-          <!-- Memorization Progress -->
-          <div class="card">
-            <div class="card-header">
-              <h3 style="font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--space-2);">
-                <i data-lucide="book-open-check" style="width:20px;height:20px;color:var(--green-500);"></i>
-                تقدم الحفظ
-              </h3>
-            </div>
-            <div class="card-body">
-              <!-- Progress Bar -->
-              <div class="progress-container" style="margin-bottom: var(--space-6);">
-                <div class="progress-label">
-                  <span class="label-text">نسبة الإنجاز</span>
-                  <span class="label-value">${progress}%</span>
-                </div>
-                <div class="progress-bar progress-bar-lg">
-                  <div class="progress-fill" style="width: ${progress}%;"></div>
-                </div>
-              </div>
-
-              ${lastEntry ? `
-              <div style="background: var(--green-50); padding: var(--space-4); border-radius: var(--border-radius-md); margin-bottom: var(--space-5);">
-                <div style="font-size: var(--font-size-xs); color: var(--green-600); font-weight: 600; margin-bottom: var(--space-1);">آخر إنجاز</div>
-                <div style="font-size: var(--font-size-sm); font-weight: 600;">سورة ${lastEntry.surah}</div>
-                <div style="font-size: var(--font-size-xs); color: var(--text-secondary);">الآيات ${lastEntry.fromVerse} — ${lastEntry.toVerse} • ${formatDate(lastEntry.date)}</div>
-              </div>
-              ` : ''}
-
-              <!-- Memorized Surahs -->
-              <h4 style="font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">السور المحفوظة</h4>
-              <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
-                ${memEntries.map(m => `
-                  <span class="badge badge-green" style="font-size: var(--font-size-xs);">
-                    ${m.surah} (${m.fromVerse}-${m.toVerse})
-                  </span>
-                `).join('')}
-              </div>
-            </div>
-          </div>
-
-          <!-- Attendance & Activity -->
+        <!-- 2-Column Educational Details -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--space-6);">
+          
+          <!-- Right: Quranic Memorization Track -->
           <div style="display: flex; flex-direction: column; gap: var(--space-6);">
-            <!-- Attendance Card -->
+            
+            <!-- Surah Al-Mulk Milestone Card -->
             <div class="card">
               <div class="card-header">
-                <h3 style="font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--space-2);">
-                  <i data-lucide="calendar-check" style="width:20px;height:20px;color:var(--info);"></i>
-                  الحضور والغياب
+                <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+                  <i data-lucide="book-open-check" style="width: 18px; height: 18px; color: var(--emerald-800);"></i>
+                  <span>التقدم في سورة الملك المقررة</span>
+                </h3>
+                <span class="badge badge-green">${memorizedVerses} / 30 آية</span>
+              </div>
+              <div class="card-body">
+                <div class="progress-container" style="margin-bottom: var(--space-4);">
+                  <div class="progress-bar progress-bar-lg" style="height: 12px;">
+                    <div class="progress-fill" style="width: ${progress}%; background: linear-gradient(90deg, var(--emerald-800), var(--emerald-500));"></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                    <span>بداية السورة (آية 1)</span>
+                    <span>ختام السورة (آية 30)</span>
+                  </div>
+                </div>
+
+                ${lastEntry ? `
+                  <div style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: var(--space-4); margin-bottom: var(--space-4);">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--emerald-800); text-transform: uppercase; margin-bottom: 2px;">
+                      آخر تسميع مسجل
+                    </div>
+                    <div style="font-weight: 700; font-size: var(--font-size-base); color: var(--text-primary); margin-bottom: 2px;">
+                      سورة ${lastEntry.surah} — الآيات (${lastEntry.versesText || (lastEntry.fromVerse + ' - ' + lastEntry.toVerse)})
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: var(--space-2); align-items: center;">
+                      <span>تاريخ الحصة: ${formatDate(lastEntry.date)}</span>
+                      ${lastEntry.evaluation ? `<span>•</span> <span class="badge badge-green" style="font-size: 10px;">${lastEntry.evaluation}</span>` : ''}
+                    </div>
+                    ${lastEntry.notes ? `
+                      <div class="notes-text" style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-subtle);">
+                        ${lastEntry.notes}
+                      </div>
+                    ` : ''}
+                  </div>
+                ` : ''}
+
+                <!-- Historical Memorization Entries -->
+                <div style="font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: var(--space-2);">
+                  سجل حصص التسميع والمراجعة:
+                </div>
+                ${memEntries.length === 0 ? `
+                  <div style="text-align: center; padding: var(--space-4); color: var(--text-muted); font-size: var(--font-size-xs);">
+                    لم يتم تسجيل أي تسميع بعد
+                  </div>
+                ` : `
+                  <div style="display: flex; flex-direction: column; gap: var(--space-2); max-height: 240px; overflow-y: auto;">
+                    ${memEntries.map(m => `
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: var(--bg-subtle); border-radius: var(--border-radius-sm); font-size: 12px;">
+                        <div>
+                          <strong>سورة ${m.surah}</strong> (${m.versesText || (m.fromVerse + ' - ' + m.toVerse)})
+                          <span style="color: var(--text-muted); font-size: 10px; margin-right: 6px;">${formatDate(m.date)}</span>
+                        </div>
+                        <span class="badge badge-gray" style="font-size: 10px;">${m.evaluation || 'معتمد'}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <!-- Notes & Observations Card -->
+            ${student.notes ? `
+              <div class="card">
+                <div class="card-header">
+                  <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+                    <i data-lucide="message-square" style="width: 17px; height: 17px; color: var(--emerald-800);"></i>
+                    <span>ملاحظات تربوية وإدارية</span>
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <p class="reading-content" style="font-size: var(--font-size-sm); color: var(--text-secondary); margin: 0; line-height: 1.8;">
+                    ${student.notes}
+                  </p>
+                </div>
+              </div>
+            ` : ''}
+
+          </div>
+
+          <!-- Left: Attendance & Competitions & Points -->
+          <div style="display: flex; flex-direction: column; gap: var(--space-6);">
+            
+            <!-- Attendance History Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+                  <i data-lucide="calendar-check" style="width: 18px; height: 18px; color: var(--emerald-800);"></i>
+                  <span>المواظبة وسجل الحضور</span>
                 </h3>
               </div>
               <div class="card-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); text-align: center; margin-bottom: var(--space-4);">
-                  <div>
-                    <div style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--green-500);">${attStats.present}</div>
-                    <div style="font-size: var(--font-size-xs); color: var(--text-secondary);">حاضر</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-2); text-align: center; margin-bottom: var(--space-4);">
+                  <div style="background: var(--att-present-bg); padding: 8px; border-radius: var(--border-radius-md); border: 1px solid var(--att-present-border);">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--att-present-text);">${attStats.present}</div>
+                    <div style="font-size: 10px; color: var(--att-present-text); font-weight: 600;">حاضر</div>
                   </div>
-                  <div>
-                    <div style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--danger);">${attStats.absent}</div>
-                    <div style="font-size: var(--font-size-xs); color: var(--text-secondary);">غائب</div>
+                  <div style="background: var(--att-absent-bg); padding: 8px; border-radius: var(--border-radius-md); border: 1px solid var(--att-absent-border);">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--att-absent-text);">${attStats.absent}</div>
+                    <div style="font-size: 10px; color: var(--att-absent-text); font-weight: 600;">غائب</div>
                   </div>
-                  <div>
-                    <div style="font-size: var(--font-size-2xl); font-weight: 800; color: var(--warning);">${attStats.excused}</div>
-                    <div style="font-size: var(--font-size-xs); color: var(--text-secondary);">بعذر</div>
+                  <div style="background: var(--att-excused-bg); padding: 8px; border-radius: var(--border-radius-md); border: 1px solid var(--att-excused-border);">
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--att-excused-text);">${attStats.excused}</div>
+                    <div style="font-size: 10px; color: var(--att-excused-text); font-weight: 600;">بعذر</div>
                   </div>
                 </div>
+
                 <div class="progress-container">
                   <div class="progress-label">
-                    <span class="label-text">نسبة الحضور</span>
-                    <span class="label-value" style="color: ${attStats.percentage >= 90 ? 'var(--green-500)' : 'var(--gold-500)'};">${attStats.percentage}%</span>
+                    <span class="label-text">معدل الانضباط</span>
+                    <span class="label-value" style="color: var(--emerald-800);">${attStats.percentage}%</span>
                   </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${attStats.percentage}%; background: ${attStats.percentage >= 90 ? 'linear-gradient(90deg, var(--green-400), var(--green-500))' : 'linear-gradient(90deg, var(--gold-400), var(--gold-500))'}"></div>
+                  <div class="progress-bar progress-bar-sm">
+                    <div class="progress-fill" style="width: ${attStats.percentage}%; background: var(--emerald-700);"></div>
                   </div>
                 </div>
               </div>
@@ -194,31 +259,37 @@ export function renderStudentProfilePage(params) {
             <!-- Competitions Card -->
             <div class="card">
               <div class="card-header">
-                <h3 style="font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--space-2);">
-                  <i data-lucide="trophy" style="width:20px;height:20px;color:var(--gold-500);"></i>
-                  المسابقات
+                <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+                  <i data-lucide="award" style="width: 18px; height: 18px; color: var(--brass-500);"></i>
+                  <span>المسابقات والتتويجات</span>
                 </h3>
               </div>
               <div class="card-body">
                 ${studentCompetitions.length === 0 ? `
-                  <p style="color: var(--text-muted); font-size: var(--font-size-sm); text-align: center; padding: var(--space-4);">
-                    لم يشارك في أي مسابقة بعد
-                  </p>
+                  <div style="text-align: center; padding: var(--space-4); color: var(--text-muted); font-size: var(--font-size-xs);">
+                    لم يشارك الطالب في أي مسابقة رسمية بعد
+                  </div>
                 ` : `
-                  <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                  <div style="display: flex; flex-direction: column; gap: var(--space-2);">
                     ${studentCompetitions.map(comp => {
-                      const result = comp.results?.find(r => r.studentId === student.id);
-                      const rankEmoji = result ? (result.rank === 1 ? '🏆' : result.rank === 2 ? '🥈' : result.rank === 3 ? '🥉' : '') : '';
+                      const res = comp.results?.find(r => r.studentId === student.id);
+                      const rankIcons = { 1: '🥇 المركز الأول', 2: '🥈 المركز الثاني', 3: '🥉 المركز الثالث' };
                       return `
-                        <div style="padding: var(--space-3); background: var(--gray-50); border-radius: var(--border-radius-md);">
-                          <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                              <div style="font-weight: 600; font-size: var(--font-size-sm);">${comp.name}</div>
-                              <div style="font-size: var(--font-size-xs); color: var(--text-muted);">${formatDate(comp.date)}</div>
-                            </div>
-                            ${result ? `<span style="font-size: var(--font-size-lg);">${rankEmoji}</span>` : '<span class="badge badge-gray">مشارك</span>'}
+                        <div style="padding: 10px; background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: var(--border-radius-md);">
+                          <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: 700; font-size: var(--font-size-xs); color: var(--text-primary);">${comp.name}</div>
+                            <span style="font-size: 10px; color: var(--text-muted);">${formatDate(comp.date)}</span>
                           </div>
-                          ${result ? `<div style="font-size: var(--font-size-xs); color: var(--gold-600); margin-top: var(--space-1);">المركز ${result.rank} — ${result.prize}</div>` : ''}
+                          ${res ? `
+                            <div style="margin-top: 4px; display: flex; justify-content: space-between; align-items: center;">
+                              <span class="badge badge-gold" style="font-size: 10px;">${rankIcons[res.rank] || 'متوج'}</span>
+                              <span style="font-size: 11px; color: var(--brass-700); font-weight: 600;">${res.prize}</span>
+                            </div>
+                          ` : `
+                            <div style="margin-top: 4px;">
+                              <span class="badge badge-gray" style="font-size: 10px;">مشارك في التصفيات</span>
+                            </div>
+                          `}
                         </div>
                       `;
                     }).join('')}
@@ -230,46 +301,41 @@ export function renderStudentProfilePage(params) {
             <!-- Points History Card -->
             <div class="card">
               <div class="card-header">
-                <h3 style="font-size: var(--font-size-lg); display: flex; align-items: center; gap: var(--space-2);">
-                  <i data-lucide="star" style="width:20px;height:20px;color:var(--warning);"></i>
-                  سجل النقاط
+                <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+                  <i data-lucide="star" style="width: 18px; height: 18px; color: var(--brass-500);"></i>
+                  <span>سجل نقاط التميز</span>
                 </h3>
+                <span class="badge badge-green">${pointsData.total || 0} نقطة</span>
               </div>
               <div class="card-body">
                 ${pointsData.history.length === 0 ? `
-                  <p style="color: var(--text-muted); font-size: var(--font-size-sm); text-align: center; padding: var(--space-4);">
-                    لا يوجد سجل نقاط لهذا الطالب
-                  </p>
+                  <div style="text-align: center; padding: var(--space-4); color: var(--text-muted); font-size: var(--font-size-xs);">
+                    لا يوجد سجل نقاط مضاف بعد
+                  </div>
                 ` : `
-                  <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                    ${pointsData.history.slice(0, 5).map(entry => `
-                      <div style="padding: var(--space-3); background: var(--gray-50); border-radius: var(--border-radius-md); display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; flex-direction: column; gap: var(--space-2); max-height: 200px; overflow-y: auto;">
+                    ${pointsData.history.slice(0, 5).map(e => `
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--bg-canvas); border-radius: var(--border-radius-sm); border: 1px solid var(--border-subtle); font-size: 11px;">
                         <div>
-                          <div style="font-weight: 600; font-size: var(--font-size-sm);">${entry.reason}</div>
-                          <div style="font-size: var(--font-size-xs); color: var(--text-muted);">${formatDate(entry.date)}</div>
+                          <strong>${e.reason}</strong>
+                          <div style="font-size: 10px; color: var(--text-muted);">${formatDate(e.date)}</div>
                         </div>
-                        <span class="badge ${entry.delta > 0 ? 'badge-green' : 'badge-danger'}" style="font-size: var(--font-size-sm); font-weight: 700;">${entry.delta > 0 ? '+' : ''}${entry.delta}</span>
+                        <span class="badge ${e.delta > 0 ? 'badge-green' : 'badge-red'}" style="font-weight: 700;">
+                          ${e.delta > 0 ? '+' : ''}${e.delta}
+                        </span>
                       </div>
                     `).join('')}
                   </div>
                 `}
               </div>
             </div>
+
           </div>
+
         </div>
 
-        ${student.notes ? `
-        <div class="card" style="margin-top: var(--space-6);">
-          <div class="card-body" style="display: flex; align-items: center; gap: var(--space-3);">
-            <i data-lucide="message-circle" style="width:20px;height:20px;color:var(--text-muted);flex-shrink:0;"></i>
-            <div>
-              <div style="font-size: var(--font-size-xs); color: var(--text-muted); margin-bottom: var(--space-1);">ملاحظات</div>
-              <div style="font-size: var(--font-size-sm);">${student.notes}</div>
-            </div>
-          </div>
-        </div>
-        ` : ''}
       </div>
+
     </main>
 
     ${renderFooter()}

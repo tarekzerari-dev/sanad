@@ -1,6 +1,6 @@
-// ============================
-// Admin Layout (Sidebar)
-// ============================
+// ============================================================
+// سند — Admin Layout (Master Shell)
+// ============================================================
 
 import { adminLogout, getSettings, pushToCloud, pullFromCloud } from './data/store.js';
 import { navigateTo } from './utils/router.js';
@@ -9,83 +9,126 @@ import { showToast } from './components/toast.js';
 
 export function renderAdminLayout(currentPath, contentHtml) {
   const settings = getSettings();
-  const navItems = [
-    { path: '/admin/dashboard', icon: 'layout-dashboard', label: 'الرئيسية' },
-    { path: '/admin/journal', icon: 'book-open', label: 'اليوميات والبرنامج' },
-    { path: '/admin/students', icon: 'users', label: 'الطلبة' },
-    { path: '/admin/attendance', icon: 'calendar-check', label: 'الحضور' },
-    { path: '/admin/memorization', icon: 'book-open-check', label: 'الحفظ' },
-    { path: '/admin/points', icon: 'star', label: 'نقاط الطلبة' },
-    { path: '/admin/wheel', icon: 'disc-3', label: 'العجلة الدوارة' },
-    { path: '/admin/competitions', icon: 'trophy', label: 'المسابقات' },
-    { path: '/admin/settings', icon: 'settings', label: 'الإعدادات' },
+
+  const navGroups = [
+    {
+      groupTitle: 'المتابعة اليومية',
+      items: [
+        { path: '/admin/dashboard', icon: 'layout-dashboard', label: 'الرئيسية' },
+        { path: '/admin/attendance', icon: 'calendar-check', label: 'حضور اليوم' },
+        { path: '/admin/memorization', icon: 'book-open-check', label: 'متابعة الحفظ' },
+        { path: '/admin/journal', icon: 'book-open', label: 'اليوميات والبرنامج' },
+      ]
+    },
+    {
+      groupTitle: 'الطلبة والأنشطة',
+      items: [
+        { path: '/admin/students', icon: 'users', label: 'إدارة الطلبة' },
+        { path: '/admin/points', icon: 'star', label: 'نقاط الطلبة' },
+        { path: '/admin/wheel', icon: 'disc-3', label: 'العجلة الدوارة' },
+        { path: '/admin/competitions', icon: 'trophy', label: 'المسابقات القرآنية' },
+      ]
+    },
+    {
+      groupTitle: 'المنظومة',
+      items: [
+        { path: '/admin/settings', icon: 'settings-2', label: 'الإعدادات والنسخ' },
+      ]
+    }
   ];
 
-  const pageTitle = navItems.find(n => n.path === currentPath)?.label || 'لوحة التحكم';
+  let pageTitle = 'لوحة التحكم الإدارية';
+  for (const g of navGroups) {
+    const match = g.items.find(i => i.path === currentPath);
+    if (match) {
+      pageTitle = match.label;
+      break;
+    }
+  }
 
   return `
     <div class="admin-layout">
       <div class="admin-sidebar-overlay" id="sidebar-overlay"></div>
+      
+      <!-- Administrative Sidebar -->
       <aside class="admin-sidebar" id="admin-sidebar">
         <div class="admin-sidebar-brand">
-          <a href="#/" class="admin-brand-link">
-            <img src="${settings.logoUrl || '/logo.png'}" alt="سند" class="brand-logo-img-sm" />
+          <a href="#/admin/dashboard" class="admin-brand-link">
+            <img src="${settings.logoUrl || '/logo.png'}" alt="شعار سند" class="brand-logo-img-sm" />
             <div>
-              <div class="brand-name">سَنَد</div>
-              <div class="brand-sub">لوحة التحكم</div>
+              <div class="brand-name">مدرسة سَنَد</div>
+              <div class="brand-sub">الإدارة التربوية والقرآنية</div>
             </div>
           </a>
         </div>
+
         <nav class="admin-sidebar-nav">
-          ${navItems.map(item => `
-            <a href="#${item.path}" class="admin-nav-item ${currentPath === item.path ? 'active' : ''}">
-              <i data-lucide="${item.icon}"></i>
-              ${item.label}
-            </a>
+          ${navGroups.map(g => `
+            <div style="margin-bottom: var(--space-4);">
+              <div style="font-size: 11px; font-weight: 700; color: #728a7b; padding: 0 14px 6px; letter-spacing: 0.05em; text-transform: uppercase;">
+                ${g.groupTitle}
+              </div>
+              ${g.items.map(item => `
+                <a href="#${item.path}" class="admin-nav-item ${currentPath === item.path ? 'active' : ''}">
+                  <i data-lucide="${item.icon}"></i>
+                  <span>${item.label}</span>
+                </a>
+              `).join('')}
+            </div>
           `).join('')}
         </nav>
+
         <div class="admin-sidebar-footer">
-          <a href="#/" class="admin-nav-item" style="margin-bottom: var(--space-2);">
-            <i data-lucide="globe"></i>
-            عرض الموقع
+          <a href="#/" class="admin-nav-item" style="margin-bottom: var(--space-2); color: #c4d1c8;">
+            <i data-lucide="external-link"></i>
+            <span>معاينة الموقع العام</span>
           </a>
-          <button class="admin-nav-item" id="admin-logout-btn" style="width: 100%; color: var(--danger);">
+          <button class="admin-nav-item" id="admin-logout-btn" style="width: 100%; color: #f87171;">
             <i data-lucide="log-out"></i>
-            تسجيل الخروج
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </aside>
 
+      <!-- Main Administrative Workplace -->
       <div class="admin-main">
         <header class="admin-topbar">
-          <div style="display: flex; align-items: center; gap: var(--space-3);">
-            <button class="admin-sidebar-toggle btn btn-ghost btn-icon" id="sidebar-toggle" aria-label="القائمة">
+          <div style="display: flex; align-items: center; gap: var(--space-4);">
+            <button class="admin-sidebar-toggle btn btn-ghost btn-icon" id="sidebar-toggle" aria-label="فتح القائمة">
               <i data-lucide="menu"></i>
             </button>
-            <h1 class="admin-topbar-title">${pageTitle}</h1>
+            <div>
+              <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <span>سند</span>
+                <span>/</span>
+                <span style="color: var(--emerald-800); font-weight: 600;">لوحة الإدارة</span>
+              </div>
+              <h1 class="admin-topbar-title">${pageTitle}</h1>
+            </div>
           </div>
+
           <div style="display: flex; align-items: center; gap: var(--space-3);">
-            <button class="btn btn-primary" id="global-sync-btn" style="padding: 6px 12px; font-size: 13px; gap: 6px; display: flex; align-items: center; border: none; background: var(--gold-500); color: white;">
-              <i data-lucide="cloud-sync" style="width: 16px; height: 16px;"></i>
-              حفظ ومزامنة
+            <button class="btn btn-secondary btn-sm" id="global-sync-btn" style="border-color: var(--brass-300); color: var(--brass-700); background: var(--brass-50);" title="مزامنة فورية لكافة الأجهزة">
+              <i data-lucide="cloud-sync" id="sync-icon"></i>
+              <span>مزامنة سحابية</span>
             </button>
+
             <span class="admin-badge-user">
               <i data-lucide="shield-check"></i>
-              مدير النظام
+              <span>المدير التربوي</span>
             </span>
           </div>
         </header>
 
-        <div class="admin-content page-enter">
+        <main class="admin-content page-enter">
           ${contentHtml}
-        </div>
+        </main>
       </div>
     </div>
   `;
 }
 
 export function initAdminLayout() {
-  // Sidebar toggle & overlay for mobile/tablet
   const toggle = document.getElementById('sidebar-toggle');
   const sidebar = document.getElementById('admin-sidebar');
   const overlay = document.getElementById('sidebar-overlay');
@@ -109,12 +152,10 @@ export function initAdminLayout() {
     overlay.addEventListener('click', closeSidebar);
   }
 
-  // Close sidebar on link click on mobile
   sidebar?.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', closeSidebar);
   });
 
-  // Logout
   const logoutBtn = document.getElementById('admin-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
@@ -123,26 +164,23 @@ export function initAdminLayout() {
     });
   }
 
-  // Global Sync Button
   const globalSyncBtn = document.getElementById('global-sync-btn');
   if (globalSyncBtn) {
     globalSyncBtn.addEventListener('click', async () => {
-      const icon = globalSyncBtn.querySelector('i');
-      if (icon) icon.classList.add('spinning'); // Assume we can add a spin effect via CSS, or just showToast
+      const icon = document.getElementById('sync-icon');
+      if (icon) icon.classList.add('spinning');
       
-      showToast('جاري المزامنة والحفظ مع جميع الأجهزة...', 'info');
+      showToast('جاري المزامنة السحابية مع كافة أجهزة المدرسة...', 'info');
       
-      // Push first to save local changes, then pull to get others' changes
       await pushToCloud();
       const updated = await pullFromCloud();
       
       if (icon) icon.classList.remove('spinning');
       
-      showToast('تمت المزامنة بنجاح! البيانات الآن محدثة لدى جميع الأجهزة 🎉');
+      showToast('تمت المزامنة بنجاح! البيانات الآن محدثة على جميع الأجهزة 🎉');
       
       if (updated) {
-        // Reload current view to reflect pulled changes
-        setTimeout(() => location.reload(), 1000);
+        setTimeout(() => location.reload(), 800);
       }
     });
   }

@@ -35,28 +35,28 @@ function boyAvatar(skinTone, hairColor, shirtColor) {
   const hair = HAIR_COLORS[hairColor];
   const shirt = SHIRT_COLORS[shirtColor];
   
-  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background -->
-    <circle cx="32" cy="32" r="32" fill="${shirt}" opacity="0.15"/>
+  return `<svg viewBox="-4 -4 72 72" xmlns="http://www.w3.org/2000/svg" style="display:block; width:100%; height:100%;">
+    <!-- Background Circle with breathing cushion -->
+    <circle cx="32" cy="32" r="31" fill="${shirt}" opacity="0.16"/>
     
     <!-- Body -->
-    <path d="M16 64 L16 48 C16 38, 48 38, 48 48 L48 64 Z" fill="${shirt}"/>
+    <path d="M15 64 L15 49 C15 39, 49 39, 49 49 L49 64 Z" fill="${shirt}"/>
     
     <!-- Neck -->
-    <rect x="28" y="36" width="8" height="6" rx="2" fill="${skin}"/>
+    <rect x="28" y="37" width="8" height="6" rx="2" fill="${skin}"/>
     
     <!-- Head -->
-    <circle cx="32" cy="26" r="14" fill="${skin}"/>
+    <circle cx="32" cy="27" r="13" fill="${skin}"/>
     
     <!-- Hair -->
-    <path d="M16 26 C16 10, 48 10, 48 26 C48 20, 32 14, 16 26 Z" fill="${hair}"/>
+    <path d="M17 27 C17 14, 47 14, 47 27 C47 21, 32 16, 17 27 Z" fill="${hair}"/>
     
     <!-- Eyes -->
-    <circle cx="27" cy="26" r="2" fill="#333333"/>
-    <circle cx="37" cy="26" r="2" fill="#333333"/>
+    <circle cx="27.5" cy="27" r="1.9" fill="#2d3748"/>
+    <circle cx="36.5" cy="27" r="1.9" fill="#2d3748"/>
     
     <!-- Smile -->
-    <path d="M28 32 Q32 36 36 32" fill="none" stroke="#C0846E" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M28.5 32 Q32 35.5 35.5 32" fill="none" stroke="#b46a55" stroke-width="2.2" stroke-linecap="round"/>
   </svg>`;
 }
 
@@ -64,28 +64,28 @@ function girlAvatar(skinTone, hijabColorKey) {
   const skin = SKIN_TONES[skinTone];
   const hijab = HIJAB_COLORS[hijabColorKey];
 
-  return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-    <!-- Background -->
-    <circle cx="32" cy="32" r="32" fill="${hijab}" opacity="0.15"/>
+  return `<svg viewBox="-4 -4 72 72" xmlns="http://www.w3.org/2000/svg" style="display:block; width:100%; height:100%;">
+    <!-- Background Circle with breathing cushion -->
+    <circle cx="32" cy="32" r="31" fill="${hijab}" opacity="0.16"/>
     
     <!-- Body (Abaya/Dress) -->
-    <path d="M14 64 L14 46 C14 36, 50 36, 50 46 L50 64 Z" fill="${hijab}"/>
+    <path d="M14 64 L14 47 C14 37, 50 37, 50 47 L50 64 Z" fill="${hijab}"/>
     
     <!-- Hijab Back & Wrap -->
-    <path d="M18 40 Q16 18 32 12 Q48 18 46 40 Q32 50 18 40 Z" fill="${hijab}"/>
+    <path d="M18 41 Q17 19 32 14 Q47 19 46 41 Q32 50 18 41 Z" fill="${hijab}"/>
     
     <!-- Inner face background for complete coverage -->
-    <circle cx="32" cy="28" r="11" fill="${skin}"/>
+    <circle cx="32" cy="29" r="10.5" fill="${skin}"/>
     
     <!-- Hijab top inner styling -->
-    <path d="M22 22 Q32 16 42 22 Q32 19 22 22 Z" fill="#ffffff" opacity="0.3"/>
+    <path d="M22 23 Q32 17 42 23 Q32 20 22 23 Z" fill="#ffffff" opacity="0.35"/>
     
     <!-- Eyes -->
-    <circle cx="27.5" cy="28" r="2" fill="#333333"/>
-    <circle cx="36.5" cy="28" r="2" fill="#333333"/>
+    <circle cx="28" cy="29" r="1.9" fill="#2d3748"/>
+    <circle cx="36" cy="29" r="1.9" fill="#2d3748"/>
     
     <!-- Smile -->
-    <path d="M29 33 Q32 36 35 33" fill="none" stroke="#C0846E" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M29.5 33.5 Q32 36 34.5 33.5" fill="none" stroke="#b46a55" stroke-width="2.2" stroke-linecap="round"/>
   </svg>`;
 }
 

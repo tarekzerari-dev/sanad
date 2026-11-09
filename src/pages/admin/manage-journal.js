@@ -1,6 +1,6 @@
-// ============================
-// Admin - Manage Journal & Schedule
-// ============================
+// ============================================================
+// سند — Admin Manage Journal & Schedule (اليوميات والبرنامج الأسبوعي)
+// ============================================================
 
 import { getJournalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry, getWeeklySchedule, setWeeklySchedule, getAttendanceForDate, getStudents } from '../../data/store.js';
 import { renderAdminLayout, initAdminLayout } from '../../admin-layout.js';
@@ -9,61 +9,81 @@ import { showToast } from '../../components/toast.js';
 import { initIcons, generateId, formatDate, getTodayStr, GROUPS } from '../../utils/helpers.js';
 
 let adminJournalFilter = 'all'; // 'all' | 'active' | 'archived'
+let activeTab = 'journal'; // 'journal' | 'schedule'
 
 export function renderManageJournalPage() {
   const content = `
-    <div class="page-header">
+    <!-- Page Header & Action Controls -->
+    <div class="page-header" style="margin-bottom: var(--space-5);">
       <div>
-        <h2 style="font-size: var(--font-size-xl);">يوميات المدرسة والبرنامج الأسبوعي</h2>
-        <p style="font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 4px;">إدخال ما تم تدريسه يومياً وإدارة الرزنامة الأسبوعية وميزة الأرشفة</p>
+        <h2 style="font-size: 1.5rem; margin-bottom: 4px;">يوميات المدرسة والبرنامج التعليمي</h2>
+        <p style="font-size: var(--font-size-xs); color: var(--text-secondary); margin: 0;">
+          تدوين تفاصيل الدروس اليومية، أحكام التجويد الملقنة، ومتابعة الرزنامة الأسبوعية للحلقات
+        </p>
       </div>
-      <div style="display: flex; gap: var(--space-3);">
-        <button class="btn btn-secondary" id="edit-schedule-btn">
+
+      <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" id="edit-schedule-btn">
           <i data-lucide="calendar"></i>
-          تعديل الرزنامة الأسبوعية
+          <span>تعديل الرزنامة الأسبوعية</span>
         </button>
         <button class="btn btn-primary" id="add-entry-btn">
           <i data-lucide="plus"></i>
-          إضافة يومية جديدة
+          <span>تدوين حصة جديدة</span>
         </button>
       </div>
     </div>
 
-    <!-- Weekly Schedule Preview -->
-    <div class="card" style="margin-bottom: var(--space-6); border-top: 3px solid var(--green-500);">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: var(--font-size-base); display: flex; align-items: center; gap: var(--space-2);">
-          <i data-lucide="calendar-range" style="width: 18px; height: 18px; color: var(--green-500);"></i>
-          الرزنامة الأسبوعية الحالية (السبت — الأربعاء • 09:00 — 10:30)
-        </h3>
-        <button class="btn btn-ghost btn-sm" id="edit-schedule-link">
-          <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
-          تعديل
+    <!-- View Mode Tabs (Journal vs Schedule) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);">
+      
+      <!-- Primary Tabs -->
+      <div style="display: flex; gap: var(--space-2); background: var(--bg-surface); padding: 4px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+        <button class="btn btn-sm ${activeTab === 'journal' ? 'btn-primary' : 'btn-ghost'}" id="tab-journal-btn" style="border-radius: var(--border-radius-sm);">
+          <i data-lucide="book-open"></i>
+          <span>دفتر اليوميات</span>
+        </button>
+        <button class="btn btn-sm ${activeTab === 'schedule' ? 'btn-primary' : 'btn-ghost'}" id="tab-schedule-btn" style="border-radius: var(--border-radius-sm);">
+          <i data-lucide="calendar-days"></i>
+          <span>الرزنامة والتوقيت</span>
         </button>
       </div>
-      <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3);" id="admin-schedule-grid">
+
+      <!-- Journal Sub-filters (Visible when Journal Tab is active) -->
+      <div id="journal-filters-bar" style="display: ${activeTab === 'journal' ? 'flex' : 'none'}; gap: var(--space-2); align-items: center;">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">الحالة:</span>
+        <div class="filter-chips" id="admin-journal-filters">
+          <button class="filter-chip ${adminJournalFilter === 'all' ? 'active' : ''}" data-filter="all">الكل</button>
+          <button class="filter-chip ${adminJournalFilter === 'active' ? 'active' : ''}" data-filter="active">الجارية</button>
+          <button class="filter-chip ${adminJournalFilter === 'archived' ? 'active' : ''}" data-filter="archived">المؤرشفة</button>
         </div>
       </div>
+
     </div>
 
-    <!-- Journal Entries List Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
-      <h3 style="font-size: var(--font-size-lg);">سجل اليوميات والأرشيف</h3>
-      <div class="filter-chips" id="admin-journal-status-chips">
-        <button class="filter-chip ${adminJournalFilter === 'all' ? 'active' : ''}" data-status="all">جميع اليوميات</button>
-        <button class="filter-chip ${adminJournalFilter === 'active' ? 'active' : ''}" data-status="active">الحالية فقط</button>
-        <button class="filter-chip ${adminJournalFilter === 'archived' ? 'active' : ''}" data-status="archived">المؤرشفة فقط</button>
+    <!-- Journal Section View -->
+    <div id="journal-section-view" style="display: ${activeTab === 'journal' ? 'block' : 'none'};">
+      <div id="admin-entries-list" style="display: flex; flex-direction: column; gap: var(--space-5);"></div>
+
+      <div class="empty-state" id="journal-empty" style="display:none; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg);">
+        <div class="empty-icon"><i data-lucide="book-open"></i></div>
+        <h3>لا توجد مدونات مسجلة</h3>
+        <p>اضغط على "تدوين حصة جديدة" لتوثيق مجريات الحصة اليومية.</p>
       </div>
     </div>
 
-    <!-- Journal Entries Container -->
-    <div id="admin-journal-list"></div>
-
-    <div class="empty-state" id="admin-journal-empty" style="display:none;">
-      <div class="empty-icon"><i data-lucide="book-open"></i></div>
-      <h3>لا توجد يوميات مسجلة بعد</h3>
-      <p>اضغط على "إضافة يومية جديدة" لإدخال ما تم تدريسه اليوم</p>
+    <!-- Weekly Schedule Section View -->
+    <div id="schedule-section-view" style="display: ${activeTab === 'schedule' ? 'block' : 'none'};">
+      <div class="card" style="padding: var(--space-5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+          <h3 style="display: flex; align-items: center; gap: var(--space-2); margin: 0;">
+            <i data-lucide="calendar" style="width: 18px; height: 18px; color: var(--emerald-800);"></i>
+            <span>الجدول الزمني الأسبوعي لحلقات القرآن الكريم</span>
+          </h3>
+          <span class="badge badge-green">الموسم الدراسي الحالي</span>
+        </div>
+        <div id="schedule-grid-container"></div>
+      </div>
     </div>
   `;
 
@@ -72,46 +92,16 @@ export function renderManageJournalPage() {
   initAdminLayout();
   initIcons();
 
+  renderAdminEntriesList();
   renderAdminScheduleGrid();
-  renderAdminJournalList();
-
-  document.getElementById('add-entry-btn')?.addEventListener('click', () => openJournalModal());
-  document.getElementById('edit-schedule-btn')?.addEventListener('click', () => openScheduleModal());
-  document.getElementById('edit-schedule-link')?.addEventListener('click', () => openScheduleModal());
-
-  // Filter Status Chips
-  document.querySelectorAll('#admin-journal-status-chips .filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#admin-journal-status-chips .filter-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      adminJournalFilter = chip.dataset.status;
-      renderAdminJournalList();
-    });
-  });
+  initJournalEvents();
 }
 
-function renderAdminScheduleGrid() {
-  const grid = document.getElementById('admin-schedule-grid');
-  const schedule = getWeeklySchedule();
-
-  if (!grid) return;
-
-  grid.innerHTML = schedule.map(item => `
-    <div style="background: var(--gray-50); padding: var(--space-3); border-radius: var(--border-radius-md); border: 1px solid var(--border-color); border-right: 3px solid var(--green-500); text-align: right;">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 4px; flex-direction: row-reverse;">
-        <span class="badge badge-green" style="font-size: 10px;">${item.fawj}</span>
-        <strong style="color: var(--green-600);">${item.day}</strong>
-      </div>
-      <div style="font-size: var(--font-size-xs); color: var(--text-muted); margin-bottom: 6px; text-align: right;">${item.time}</div>
-      <div style="font-size: var(--font-size-xs); line-height: 1.5; text-align: right;">${item.activity}</div>
-    </div>
-  `).join('');
-}
-
-function renderAdminJournalList() {
-  let entries = getJournalEntries();
-  const list = document.getElementById('admin-journal-list');
-  const emptyState = document.getElementById('admin-journal-empty');
+function renderAdminEntriesList() {
+  const allEntries = getJournalEntries();
+  let entries = [...allEntries];
+  const listContainer = document.getElementById('admin-entries-list');
+  const emptyState = document.getElementById('journal-empty');
 
   if (adminJournalFilter === 'active') {
     entries = entries.filter(e => !e.archived);
@@ -120,259 +110,365 @@ function renderAdminJournalList() {
   }
 
   if (entries.length === 0) {
-    list.style.display = 'none';
-    emptyState.style.display = 'block';
+    if (listContainer) listContainer.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
     return;
   }
 
-  list.style.display = 'flex';
-  list.style.flexDirection = 'column';
-  list.style.gap = 'var(--space-4)';
-  emptyState.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'none';
 
-  list.innerHTML = entries.map(entry => `
-    <div class="card" style="border-right: 4px solid ${entry.archived ? 'var(--text-muted)' : 'var(--green-500)'};">
-      <div class="card-body">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap;">
-          <div style="flex: 1;">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
-              <span class="badge ${entry.archived ? 'badge-gray' : 'badge-green'}">${entry.group || 'جميع الأفواج'}</span>
-              ${entry.archived ? `<span class="badge badge-gray"><i data-lucide="archive" style="width:12px;height:12px;"></i> في الأرشيف</span>` : ''}
-              <span style="font-size: var(--font-size-xs); color: var(--text-muted);"><i data-lucide="calendar" style="width:12px;height:12px;"></i> ${formatDate(entry.date)} (تاريخ ميلادي)</span>
-            </div>
-            <h3 style="font-size: var(--font-size-base); color: ${entry.archived ? 'var(--text-secondary)' : 'var(--green-700)'}; margin-bottom: var(--space-3);">${entry.title}</h3>
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); font-size: var(--font-size-xs);">
-              ${entry.memorizationText ? `<div><strong>📖 الحفظ والتدريس:</strong> ${entry.memorizationText}</div>` : ''}
-              ${entry.tajweedText ? `<div><strong>📜 أحكام التجويد:</strong> ${entry.tajweedText}</div>` : ''}
-              ${entry.homeworkText ? `<div><strong>🏠 الواجب المنزلي:</strong> ${entry.homeworkText}</div>` : ''}
-            </div>
+  const allStudents = getStudents();
 
-            <!-- Daily Attendance Record Summary -->
-            ${(() => {
-              const att = getAttendanceForDate(entry.date);
-              
-              let entryStudents = getStudents();
-              if (entry.group && entry.group !== 'الكل' && entry.group !== 'all') {
-                entryStudents = entryStudents.filter(s => s.group === entry.group);
-              }
-              
-              let present = 0, absent = 0, excused = 0, recordedCount = 0;
-              entryStudents.forEach(s => {
-                if (att[s.id]) {
-                  recordedCount++;
-                  if (att[s.id] === 'present') present++;
-                  else if (att[s.id] === 'absent') absent++;
-                  else if (att[s.id] === 'excused') excused++;
-                }
-              });
+  listContainer.innerHTML = entries.map(entry => {
+    const attData = getAttendanceForDate(entry.date);
+    let presentCount = 0;
+    Object.values(attData).forEach(st => {
+      if (st === 'present') presentCount++;
+    });
 
-              const total = recordedCount;
-
-              return `
-                <div style="margin-top: var(--space-3); padding-top: var(--space-2); border-top: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); font-size: 12px;">
-                  <span style="color: var(--text-secondary); font-weight: 600;">سجل الحضور لهذه الحصة:</span>
-                  ${total > 0 ? `
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                      <span class="badge badge-green" style="font-size: 10px;">🟢 ${present} حاضر</span>
-                      ${absent > 0 ? `<span class="badge" style="font-size: 10px; background: #fef2f2; color: #dc2626;">🔴 ${absent} غائب</span>` : ''}
-                      ${excused > 0 ? `<span class="badge" style="font-size: 10px; background: #fffbeb; color: #d97706;">🟡 ${excused} بعذر</span>` : ''}
-                      <a href="#/admin/attendance" class="btn btn-ghost btn-xs" style="padding: 2px 6px; font-size: 10px; color: var(--green-600);">تسجيل/تعديل الحضور</a>
-                    </div>
-                  ` : `
-                    <div style="display: flex; gap: 6px; align-items: center;">
-                      <span class="badge badge-gray" style="font-size: 10px;">لم يُسجل الحضور بعد</span>
-                      <a href="#/admin/attendance" class="btn btn-ghost btn-xs" style="padding: 2px 6px; font-size: 10px; color: var(--green-600);">تسجيل الحضور</a>
-                    </div>
-                  `}
-                </div>
-              `;
-            })()}
+    return `
+      <div class="card" style="border: 1px solid var(--border-color); ${entry.archived ? 'opacity: 0.85;' : ''}">
+        
+        <!-- Card Header -->
+        <div class="card-header" style="background: var(--bg-canvas);">
+          <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+            <span class="badge badge-green" style="font-size: 11px;">
+              <i data-lucide="calendar"></i>
+              ${formatDate(entry.date)}
+            </span>
+            <span class="badge badge-gray" style="font-size: 11px;">
+              ${entry.group}
+            </span>
+            ${entry.archived ? `
+              <span class="badge badge-gold" style="font-size: 10px;">
+                <i data-lucide="archive"></i>
+                مؤرشفة
+              </span>
+            ` : `
+              <span class="badge" style="background: #eaf6ee; color: var(--emerald-800); font-size: 10px;">
+                حصة نشطة
+              </span>
+            `}
           </div>
-          
-          <div style="display: flex; gap: var(--space-2); align-items: center;">
-            <button class="btn ${entry.archived ? 'btn-secondary' : 'btn-ghost'} btn-sm toggle-archive-btn" data-id="${entry.id}" title="${entry.archived ? 'إعادة للحالية' : 'نقل للأرشيف'}">
-              <i data-lucide="${entry.archived ? 'archive-restore' : 'archive'}" style="width:16px;height:16px;"></i>
-              ${entry.archived ? 'إعادة للحالية' : 'أرشفة'}
+
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm btn-icon edit-entry-btn" data-id="${entry.id}" title="تعديل المدونة">
+              <i data-lucide="pencil" style="width: 15px; height: 15px;"></i>
             </button>
-            <button class="btn btn-ghost btn-sm edit-entry-btn" data-id="${entry.id}" title="تعديل">
-              <i data-lucide="pencil" style="width:16px;height:16px;"></i>
+            <button class="btn btn-ghost btn-sm btn-icon toggle-archive-btn" data-id="${entry.id}" title="${entry.archived ? 'استعادة من الأرشيف' : 'أرشفة الحصة'}">
+              <i data-lucide="${entry.archived ? 'archive-restore' : 'archive'}" style="width: 15px; height: 15px;"></i>
             </button>
-            <button class="btn btn-ghost btn-sm delete-entry-btn" data-id="${entry.id}" title="حذف" style="color: var(--danger);">
-              <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+            <button class="btn btn-ghost btn-sm btn-icon delete-entry-btn" data-id="${entry.id}" title="حذف" style="color: var(--danger);">
+              <i data-lucide="trash-2" style="width: 15px; height: 15px;"></i>
             </button>
           </div>
         </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <h3 style="font-family: var(--font-heading); font-size: 1.3rem; color: var(--emerald-950); margin-bottom: var(--space-3);">
+            ${entry.title}
+          </h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-4);">
+            
+            <!-- Memorization Component -->
+            <div style="background: var(--bg-canvas); padding: var(--space-4); border-radius: var(--border-radius-md); border: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--font-size-xs); color: var(--emerald-900); margin-bottom: 6px;">
+                <i data-lucide="book-open" style="width: 15px; height: 15px; color: var(--emerald-700);"></i>
+                <span>الحفظ والتلاوة المقررة</span>
+              </div>
+              <div class="reading-content" style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                ${entry.memorizationText || '—'}
+              </div>
+            </div>
+
+            <!-- Tajweed Component -->
+            <div style="background: var(--bg-canvas); padding: var(--space-4); border-radius: var(--border-radius-md); border: 1px solid var(--border-subtle);">
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--font-size-xs); color: var(--brass-700); margin-bottom: 6px;">
+                <i data-lucide="mic-2" style="width: 15px; height: 15px; color: var(--brass-600);"></i>
+                <span>أحكام التجويد والتطبيق</span>
+              </div>
+              <div class="reading-content" style="font-size: var(--font-size-sm); color: var(--text-secondary);">
+                ${entry.tajweedText || '—'}
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Classroom Activities & Observations -->
+          ${entry.activitiesText ? `
+            <div style="margin-bottom: var(--space-3); font-size: var(--font-size-xs); color: var(--text-secondary);">
+              <strong>الأنشطة الصفية والملاحظات:</strong> ${entry.activitiesText}
+            </div>
+          ` : ''}
+
+          <!-- Homework / Assignment -->
+          ${entry.homeworkText ? `
+            <div style="background: var(--brass-50); border: 1px solid var(--brass-200); border-radius: var(--border-radius-sm); padding: 8px 12px; font-size: 12px; color: var(--brass-800); display: flex; align-items: center; gap: var(--space-2);">
+              <i data-lucide="check-square" style="width: 15px; height: 15px; color: var(--brass-600);"></i>
+              <span><strong>الواجب والتكليف المنزلي:</strong> ${entry.homeworkText}</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Card Footer (Attendance Link) -->
+        <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted);">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="users" style="width: 14px; height: 14px; color: var(--emerald-700);"></i>
+            <span>الحضور الموثق في هذه الحصة: <strong>${presentCount} طالب</strong></span>
+          </div>
+          <a href="#/admin/attendance" style="font-weight: 600; color: var(--emerald-800);">فتح سجل الحضور لهذا اليوم &larr;</a>
+        </div>
+
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   initIcons();
 
-  list.querySelectorAll('.toggle-archive-btn').forEach(btn => {
+  // Attach Action Handlers
+  listContainer.querySelectorAll('.edit-entry-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEntryModal(btn.dataset.id));
+  });
+
+  listContainer.querySelectorAll('.toggle-archive-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const entry = getJournalEntries().find(e => e.id === btn.dataset.id);
+      const entry = allEntries.find(e => e.id === btn.dataset.id);
       if (entry) {
-        const newArchivedState = !entry.archived;
-        updateJournalEntry(entry.id, { archived: newArchivedState });
-        showToast(newArchivedState ? 'تمت أرشفة اليومية' : 'تمت إعادة اليومية للحصص الحالية');
-        renderAdminJournalList();
+        updateJournalEntry(entry.id, { archived: !entry.archived });
+        showToast(entry.archived ? 'تمت استعادة الحصة من الأرشيف' : 'تمت أرشفة الحصة بنجاح');
+        renderAdminEntriesList();
       }
     });
   });
 
-  list.querySelectorAll('.edit-entry-btn').forEach(btn => {
-    btn.addEventListener('click', () => openJournalModal(btn.dataset.id));
-  });
-
-  list.querySelectorAll('.delete-entry-btn').forEach(btn => {
+  listContainer.querySelectorAll('.delete-entry-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      confirmDialog('هل أنت متأكد من حذف هذه اليومية؟', () => {
+      confirmDialog('هل أنت متأكد من حذف هذه الحصة اليومية نهائياً؟', () => {
         deleteJournalEntry(btn.dataset.id);
-        showToast('تم حذف اليومية بنجاح');
-        renderAdminJournalList();
+        showToast('تم حذف المدونة بنجاح');
+        renderAdminEntriesList();
       });
     });
   });
 }
 
-function openJournalModal(entryId = null) {
+function renderAdminScheduleGrid() {
+  const schedule = getWeeklySchedule();
+  const container = document.getElementById('schedule-grid-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-table-wrapper">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width: 140px;">اليوم</th>
+            <th style="width: 160px;">التوقيت</th>
+            <th style="width: 140px;">الفوج</th>
+            <th>النشاط والمقرر المعتمد</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${schedule.map(item => `
+            <tr>
+              <td style="font-weight: 700; color: var(--emerald-950);">${item.day}</td>
+              <td style="font-size: var(--font-size-xs); font-weight: 600; color: var(--text-secondary);">${item.time}</td>
+              <td><span class="badge badge-gray" style="font-size: 11px;">${item.fawj}</span></td>
+              <td style="font-size: var(--font-size-sm); color: var(--text-primary);">${item.activity}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function initJournalEvents() {
+  document.getElementById('add-entry-btn')?.addEventListener('click', () => openEntryModal());
+  document.getElementById('edit-schedule-btn')?.addEventListener('click', openScheduleModal);
+
+  // Tab switching
+  const tabJournal = document.getElementById('tab-journal-btn');
+  const tabSchedule = document.getElementById('tab-schedule-btn');
+  const viewJournal = document.getElementById('journal-section-view');
+  const viewSchedule = document.getElementById('schedule-section-view');
+  const filtersBar = document.getElementById('journal-filters-bar');
+
+  tabJournal?.addEventListener('click', () => {
+    activeTab = 'journal';
+    tabJournal.className = 'btn btn-sm btn-primary';
+    tabSchedule.className = 'btn btn-sm btn-ghost';
+    viewJournal.style.display = 'block';
+    viewSchedule.style.display = 'none';
+    if (filtersBar) filtersBar.style.display = 'flex';
+  });
+
+  tabSchedule?.addEventListener('click', () => {
+    activeTab = 'schedule';
+    tabSchedule.className = 'btn btn-sm btn-primary';
+    tabJournal.className = 'btn btn-sm btn-ghost';
+    viewJournal.style.display = 'none';
+    viewSchedule.style.display = 'block';
+    if (filtersBar) filtersBar.style.display = 'none';
+  });
+
+  // Filters
+  document.querySelectorAll('#admin-journal-filters .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#admin-journal-filters .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      adminJournalFilter = chip.dataset.filter;
+      renderAdminEntriesList();
+    });
+  });
+}
+
+function openEntryModal(entryId = null) {
   const existing = entryId ? getJournalEntries().find(e => e.id === entryId) : null;
   const isEdit = !!existing;
+  const title = isEdit ? 'تعديل مدونة الحصة' : 'تدوين حصة تعليمية جديدة';
+
+  const defaultDate = existing?.date || getTodayStr();
+  const defaultGroup = existing?.group || 'الفوج 1';
 
   const body = `
-    <form id="journal-form">
+    <form id="journal-entry-form">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">التاريخ الميلادي</label>
-          <input type="date" id="jf-date" class="form-input" value="${existing?.date || getTodayStr()}" required>
+          <label class="form-label">عنوان الحصة <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="jef-title" class="form-input" value="${existing?.title || ''}" placeholder="مثال: حصة الأحد 16 أوت — سورة الملك" required>
         </div>
         <div class="form-group">
-          <label class="form-label">الفوج / المجموعة</label>
-          <select id="jf-group" class="form-select" required>
-            <option value="الكل" ${existing?.group === 'الكل' ? 'selected' : ''}>جميع الأفواج</option>
-            ${GROUPS.map(g => `<option value="${g}" ${existing?.group === g ? 'selected' : ''}>${g}</option>`).join('')}
+          <label class="form-label">الفوج المستهدف</label>
+          <select id="jef-group" class="form-select">
+            ${GROUPS.map(g => `<option value="${g}" ${defaultGroup === g ? 'selected' : ''}>${g}</option>`).join('')}
           </select>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">عنوان الحصة / الموضوع الرئيسي</label>
-        <input type="text" id="jf-title" class="form-input" value="${existing?.title || ''}" required placeholder="مثال: حصة يوم الاثنين — تحفيظ سورة الملك وأحكام النون الساكنة والتنوين">
+        <label class="form-label">تاريخ الحصة</label>
+        <input type="date" id="jef-date" class="form-input" value="${defaultDate}" required>
       </div>
 
       <div class="form-group">
-        <label class="form-label">📖 برنامج الحفظ والتدريس في الحصة</label>
-        <textarea id="jf-memorization" class="form-textarea" placeholder="ما تم حفظه وتسميعه ومراجعته خلال الحصة...">${existing?.memorizationText || ''}</textarea>
+        <label class="form-label">ما تم حفظه وتسميعه في الحصة</label>
+        <textarea id="jef-memorization" class="form-textarea" placeholder="مثال: مراجعة الآيات 1 إلى 24 وتسميع الآيات 25 إلى 30 من سورة الملك...">${existing?.memorizationText || ''}</textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">📜 أحكام التجويد الشفاهية والعملية</label>
-        <textarea id="jf-tajweed" class="form-textarea" placeholder="الأحكام والقواعد التجويدية التي تم شرحها وتطبيقها...">${existing?.tajweedText || ''}</textarea>
+        <label class="form-label">أحكام التجويد ومخارج الحروف المدروسة</label>
+        <textarea id="jef-tajweed" class="form-textarea" placeholder="مثال: تطبيقات عملية لأحكام الميم الساكنة (الإدغام الشفوي والإخفاء)...">${existing?.tajweedText || ''}</textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">🎯 أنشطة وتطبيقات أخرى</label>
-        <input type="text" id="jf-activities" class="form-input" value="${existing?.activitiesText || ''}" placeholder="تمارين فردية، قراءة نموذجية، الخ...">
+        <label class="form-label">الأنشطة الصفية والملاحظات التربوية</label>
+        <textarea id="jef-activities" class="form-textarea" placeholder="مثال: تلاوة فردية للطلبة مع تصحيح المخارج ومسابقات تشجيعية...">${existing?.activitiesText || ''}</textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">🏠 الواجب والبرنامج المنزلي (للأولياء)</label>
-        <input type="text" id="jf-homework" class="form-input" value="${existing?.homeworkText || ''}" placeholder="الآيات المطلوب حفظها أو مراجعتها في المنزل...">
+        <label class="form-label">الواجب والتكليف المنزلي</label>
+        <input type="text" id="jef-homework" class="form-input" value="${existing?.homeworkText || ''}" placeholder="مثال: حفظ وتثبيت سورة الملك استعداداً للاختبار القادم">
       </div>
 
       <div class="form-group">
-        <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
-          <input type="checkbox" id="jf-archived" ${existing?.archived ? 'checked' : ''}>
-          <span style="font-size: var(--font-size-sm); color: var(--text-secondary);">أرشفة هذه اليومية (تظهر في قسم الأرشيف للأولياء)</span>
+        <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-size: var(--font-size-sm);">
+          <input type="checkbox" id="jef-archived" ${existing?.archived ? 'checked' : ''}>
+          <span>أرشفة هذه الحصة (إخفاؤها من الواجهة الرئيسية لليوميات الجارية)</span>
         </label>
       </div>
     </form>
   `;
 
   const footer = `
-    <button class="btn btn-primary" id="save-journal-btn">
+    <button class="btn btn-primary" id="save-journal-entry-btn">
       <i data-lucide="check"></i>
-      ${isEdit ? 'حفظ التعديلات' : 'نشر اليومية'}
+      <span>${isEdit ? 'حفظ التعديلات' : 'نشر وتوثيق الحصة'}</span>
     </button>
-    <button class="btn btn-ghost" id="cancel-journal-btn">إلغاء</button>
+    <button class="btn btn-ghost" id="cancel-journal-entry-btn">إلغاء</button>
   `;
 
-  openModal(isEdit ? 'تعديل اليومية' : 'إضافة يومية جديدة للمدرسة', body, footer);
+  openModal(title, body, footer);
 
   setTimeout(() => {
     initIcons();
 
-    document.getElementById('save-journal-btn')?.addEventListener('click', () => {
-      const date = document.getElementById('jf-date').value;
-      const group = document.getElementById('jf-group').value;
-      const title = document.getElementById('jf-title').value.trim();
-      const memorizationText = document.getElementById('jf-memorization').value.trim();
-      const tajweedText = document.getElementById('jf-tajweed').value.trim();
-      const activitiesText = document.getElementById('jf-activities').value.trim();
-      const homeworkText = document.getElementById('jf-homework').value.trim();
-      const archived = document.getElementById('jf-archived').checked;
+    document.getElementById('save-journal-entry-btn')?.addEventListener('click', () => {
+      const titleVal = document.getElementById('jef-title').value.trim();
+      const group = document.getElementById('jef-group').value;
+      const date = document.getElementById('jef-date').value;
+      const memorizationText = document.getElementById('jef-memorization').value.trim();
+      const tajweedText = document.getElementById('jef-tajweed').value.trim();
+      const activitiesText = document.getElementById('jef-activities').value.trim();
+      const homeworkText = document.getElementById('jef-homework').value.trim();
+      const archived = document.getElementById('jef-archived').checked;
 
-      if (!date || !title) {
-        showToast('يرجى ملء التاريخ وعنوان الحصة', 'error');
+      if (!titleVal || !date) {
+        showToast('يرجى كتابة عنوان وتاريخ الحصة', 'error');
         return;
       }
 
       if (isEdit) {
-        updateJournalEntry(entryId, { date, group, title, memorizationText, tajweedText, activitiesText, homeworkText, archived });
-        showToast('تم تحديث اليومية بنجاح');
+        updateJournalEntry(entryId, { title: titleVal, group, date, memorizationText, tajweedText, activitiesText, homeworkText, archived });
+        showToast('تم تحديث المدونة اليومية بنجاح');
       } else {
-        addJournalEntry({
+        const newEntry = {
           id: generateId(),
-          date,
+          title: titleVal,
           group,
-          title,
+          date,
           memorizationText,
           tajweedText,
           activitiesText,
           homeworkText,
           archived,
           createdAt: new Date().toISOString()
-        });
-        showToast('تم نشر اليومية بنجاح ليراها الأولياء');
+        };
+        addJournalEntry(newEntry);
+        showToast('تم نشر وتوثيق الحصة بنجاح في اليوميات');
       }
 
       closeModal();
-      renderAdminJournalList();
+      renderAdminEntriesList();
     });
 
-    document.getElementById('cancel-journal-btn')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-journal-entry-btn')?.addEventListener('click', closeModal);
   }, 100);
 }
 
 function openScheduleModal() {
-  const currentSchedule = getWeeklySchedule();
+  const schedule = getWeeklySchedule();
 
   const body = `
-    <div style="margin-bottom: var(--space-4); font-size: var(--font-size-xs); color: var(--text-muted);">
-      يمكنك تعديل توقيت وبرنامج كل يوم من أيام الأسبوع في المدرسة:
-    </div>
-    <form id="schedule-form">
-      <div style="display: flex; flex-direction: column; gap: var(--space-4);" id="schedule-items-container">
-        ${currentSchedule.map((item, index) => `
-          <div style="background: var(--gray-50); padding: var(--space-3); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);" class="schedule-item-row">
+    <form id="schedule-edit-form">
+      <p style="font-size: var(--font-size-xs); color: var(--text-muted); margin-bottom: var(--space-4);">
+        يمكنك تعديل توقيت وأنشطة كل يوم من أيام الأسبوع في البرنامج المعتمد للمدرسة:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: var(--space-3);" id="schedule-rows-wrapper">
+        ${schedule.map((item, idx) => `
+          <div class="schedule-item-row" style="background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: var(--space-3);">
             <div class="form-row" style="margin-bottom: var(--space-2);">
-              <div class="form-group" style="margin:0;">
+              <div class="form-group" style="margin: 0;">
                 <label class="form-label" style="font-size: 11px;">اليوم</label>
-                <input type="text" class="form-input sch-day" value="${item.day}" required style="padding: 4px 8px; font-size: 13px;">
+                <input type="text" class="form-input sch-day" value="${item.day}" required style="padding: 6px 10px; font-weight: 700;">
               </div>
-              <div class="form-group" style="margin:0;">
+              <div class="form-group" style="margin: 0;">
                 <label class="form-label" style="font-size: 11px;">التوقيت</label>
-                <input type="text" class="form-input sch-time" value="${item.time}" required style="padding: 4px 8px; font-size: 13px;">
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label" style="font-size: 11px;">الفوج</label>
-                <input type="text" class="form-input sch-fawj" value="${item.fawj}" required style="padding: 4px 8px; font-size: 13px;">
+                <input type="text" class="form-input sch-time" value="${item.time}" required style="padding: 6px 10px;">
               </div>
             </div>
-            <div class="form-group" style="margin:0;">
-              <label class="form-label" style="font-size: 11px;">النشاط والبرنامج المعتمد</label>
-              <input type="text" class="form-input sch-activity" value="${item.activity}" required style="padding: 4px 8px; font-size: 13px;">
+            <div class="form-row">
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size: 11px;">الفوج المستهدف</label>
+                <input type="text" class="form-input sch-fawj" value="${item.fawj || 'الفوج 1'}" required style="padding: 6px 10px;">
+              </div>
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-size: 11px;">النشاط والمقرر المعتمد</label>
+                <input type="text" class="form-input sch-activity" value="${item.activity}" required style="padding: 6px 10px;">
+              </div>
             </div>
           </div>
         `).join('')}
@@ -383,12 +479,12 @@ function openScheduleModal() {
   const footer = `
     <button class="btn btn-primary" id="save-schedule-btn">
       <i data-lucide="check"></i>
-      حفظ الرزنامة الأسبوعية
+      <span>حفظ التعديلات في الرزنامة</span>
     </button>
     <button class="btn btn-ghost" id="cancel-schedule-btn">إلغاء</button>
   `;
 
-  openModal('تعديل الرزنامة الأسبوعية', body, footer);
+  openModal('تعديل الرزنامة والجدول الأسبوعي', body, footer);
 
   setTimeout(() => {
     initIcons();

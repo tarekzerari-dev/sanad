@@ -1,23 +1,23 @@
-// ============================
-// Home Page - Designed for Maximum Aesthetics & Quick Navigation
-// ============================
+// ============================================================
+// سند — Public Home View (الواجهة التعريفية لمدرسة سند القرآنية)
+// ============================================================
 
-import { getStudents, getCompetitions, getTodayAttendanceStats, getSettings, getDeveloperInfo } from '../../data/store.js';
+import { getStudents, getCompetitions, getSettings, getDeveloperInfo, getJournalEntries } from '../../data/store.js';
 import { renderNavbar, initNavbar } from '../../components/navbar.js';
 import { renderFooter } from '../../components/footer.js';
-import { initIcons, calculateMemorizationProgress } from '../../utils/helpers.js';
+import { initIcons, formatDate } from '../../utils/helpers.js';
 
 export function renderHomePage() {
   const students = getStudents();
   const competitions = getCompetitions();
   const settings = getSettings();
   const developer = getDeveloperInfo();
+  const journalEntries = getJournalEntries();
   
   const totalStudents = students.length;
   const boys = students.filter(s => s.gender === 'ذكر').length;
   const girls = students.filter(s => s.gender === 'أنثى').length;
 
-  // Recent competitions (last 3)
   const recentCompetitions = [...competitions]
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 3);
@@ -26,242 +26,188 @@ export function renderHomePage() {
   app.innerHTML = `
     ${renderNavbar('/')}
     
-    <main>
-      <!-- Hero Section -->
-      <section class="hero pattern-bg" style="padding-top: var(--space-12); padding-bottom: var(--space-12);">
-        <div class="hero-decoration hero-decoration-1"></div>
-        <div class="hero-decoration hero-decoration-2"></div>
+    <main style="background: var(--bg-canvas); min-height: 80vh;">
+      
+      <!-- Serene Hero Banner -->
+      <section class="hero pattern-bg">
         <div class="hero-inner">
-          <div class="hero-logo-container" style="box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);">
+          <div class="hero-logo-container">
             <img src="${settings.logoUrl || '/logo.png'}" alt="${settings.schoolName}" class="hero-logo-img" />
           </div>
-          <h1 style="font-size: var(--font-size-4xl); margin-bottom: var(--space-2); color: #ffffff; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);">${settings.schoolName || 'سَنَد'}</h1>
-          <p class="hero-subtitle" style="font-size: var(--font-size-xl); font-weight: 700; color: #FEF08A; margin-bottom: var(--space-3); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);">
-            تابع رحلة أبنائنا المباركة في حفظ كتاب الله تعالى
-          </p>
-          <p class="hero-desc" style="max-width: 680px; margin-left: auto; margin-right: auto; line-height: 1.8; color: rgba(255, 255, 255, 0.95); font-size: var(--font-size-base); font-weight: 500; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);">
-            منصة تربوية رقمية لمتابعة حفظ القرآن الكريم، أحكام التجويد، تسجيل الحضور، اليوميات والمسابقات التشجيعية بحي الأهرام مدينة عين البيضاء
+
+          <h1 style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); margin-bottom: var(--space-2); color: #ffffff; text-shadow: 0 2px 10px rgba(0,0,0,0.25);">
+            ${settings.schoolName || 'مدرسة سَنَد للقرآن الكريم وعلومه'}
+          </h1>
+          
+          <p class="hero-subtitle">
+            رحلة مباركة ومتقنة في حفظ كتاب الله تعالى وتلقي علومه وتجويده
           </p>
           
-          <!-- Hero Quick Action Buttons (Unified Color Design) -->
-          <div style="display: flex; gap: var(--space-3); justify-content: center; flex-wrap: wrap; margin-top: var(--space-8);">
-            <a href="#/students" class="hero-nav-btn">
-              <i data-lucide="users"></i>
-              قائمة الطلبة
+          <p class="hero-desc">
+            منظومة تربوية متكاملة لمتابعة حفظ القرآن الكريم، تدريس أحكام التلاوة والتجويد، رصد المواظبة والحضور، والمسابقات التشجيعية لترسيخ القرآن في صدور الناشئة
+          </p>
+          
+          <!-- Primary Focused Actions -->
+          <div style="display: flex; gap: var(--space-4); justify-content: center; align-items: center; flex-wrap: wrap; margin-top: var(--space-6);">
+            <a href="#/students" class="btn btn-brass btn-lg" style="border-radius: var(--border-radius-full); padding: 13px 28px; font-size: 1.05rem; display: inline-flex; align-items: center; gap: 8px;">
+              <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+              <span>دليل الطلبة وسجلات الحفظ</span>
             </a>
-            <a href="#/journal" class="hero-nav-btn">
-              <i data-lucide="book-open"></i>
-              يوميات المدرسة والبرنامج
-            </a>
-            <a href="#/competitions" class="hero-nav-btn">
-              <i data-lucide="trophy"></i>
-              المسابقات والجوائز
-            </a>
-            <a href="#/developer" class="hero-nav-btn">
-              <i data-lucide="code-2"></i>
-              عن المطور والأستاذ
+            <a href="#/journal" class="btn btn-white btn-lg" style="border-radius: var(--border-radius-full); padding: 13px 28px; font-size: 1.05rem; display: inline-flex; align-items: center; gap: 8px;">
+              <i data-lucide="book-open" style="width: 20px; height: 20px; color: var(--emerald-800);"></i>
+              <span>دفتر اليوميات والبرنامج</span>
             </a>
           </div>
         </div>
       </section>
 
-      <!-- Quick Stats Bar -->
-      <section class="section" style="padding-top: var(--space-6); padding-bottom: var(--space-6);">
+      <!-- Centered Metrics Deck -->
+      <section class="section" style="padding-top: var(--space-10); padding-bottom: var(--space-10);">
         <div class="container">
-          <div class="stats-bar stagger">
+          <div class="stats-grid stagger">
             <div class="stat-card">
-              <div class="stat-icon green">
-                <i data-lucide="users"></i>
-              </div>
+              <div class="stat-icon green"><i data-lucide="users"></i></div>
               <div class="stat-info">
-                <h3>إجمالي الطلبة</h3>
+                <h3>إجمالي طلبة المدرسة</h3>
                 <div class="stat-value">${totalStudents}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">${boys} أولاد • ${girls} بنات</div>
               </div>
             </div>
+
             <div class="stat-card">
-              <div class="stat-icon blue">
-                <i data-lucide="user"></i>
-              </div>
+              <div class="stat-icon gold"><i data-lucide="book-open"></i></div>
               <div class="stat-info">
-                <h3>الأولاد</h3>
-                <div class="stat-value">${boys}</div>
+                <h3>المنهج المرحلي</h3>
+                <div class="stat-value" style="font-size: 1.4rem; color: var(--emerald-800);">سورة الملك</div>
+                <div style="font-size: 11px; color: var(--text-muted);">حفظاً وتجويداً وإتقاناً</div>
               </div>
             </div>
+
             <div class="stat-card">
-              <div class="stat-icon" style="background: #fce7f3; color: #db2777;">
-                <i data-lucide="user"></i>
-              </div>
+              <div class="stat-icon blue"><i data-lucide="calendar"></i></div>
               <div class="stat-info">
-                <h3>البنات</h3>
-                <div class="stat-value">${girls}</div>
+                <h3>الحصص الموثقة</h3>
+                <div class="stat-value">${journalEntries.length}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">توثيق مستمر لليوميات</div>
               </div>
             </div>
+
             <div class="stat-card">
-              <div class="stat-icon gold">
-                <i data-lucide="trophy"></i>
-              </div>
+              <div class="stat-icon gold"><i data-lucide="trophy"></i></div>
               <div class="stat-info">
-                <h3>المسابقات والأنشطة</h3>
+                <h3>المسابقات القرآنية</h3>
                 <div class="stat-value">${competitions.length}</div>
+                <div style="font-size: 11px; color: var(--text-muted);">تحفيز وتكريم للحفظة</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Main Navigation Quick Cards (أقسام المنصة الرئيسية) -->
-      <section class="section" style="background: var(--gray-50); padding-top: var(--space-10); padding-bottom: var(--space-12);">
-        <div class="container">
-          <div class="section-header" style="margin-bottom: var(--space-8);">
-            <h2>أقسام ومميزات المنصة</h2>
-            <p>تصفح خيارات المنصة للتواصل ومتابعة أبنائك في المدرسة القرآنية</p>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-6);" class="stagger">
-            
-            <!-- Journal Card -->
-            <div class="card card-interactive" style="border-top: 4px solid var(--green-500); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <div class="icon-wrapper" style="background: var(--green-100); color: var(--green-600); width: 48px; height: 48px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-                  <i data-lucide="book-open" style="width: 24px; height: 24px;"></i>
-                </div>
-                <h3 style="font-size: var(--font-size-lg); color: var(--green-700); margin-bottom: var(--space-2);">يوميات المدرسة والبرنامج</h3>
-                <p class="text-muted" style="font-size: var(--font-size-sm); line-height: 1.7; margin-bottom: var(--space-6);">
-                  اطّلع على برنامج الحصص اليومية، ما تم تدريسه، أحكام التجويد الشفاهية، والرزنامة الأسبوعية للحصص وسجل الحضور والغياب.
-                </p>
-              </div>
-              <a href="#/journal" class="btn btn-primary" style="width: 100%;">
-                <i data-lucide="arrow-left"></i>
-                تصفح اليوميات والبرنامج
-              </a>
-            </div>
-
-            <!-- Competitions Card -->
-            <div class="card card-interactive" style="border-top: 4px solid var(--gold-500); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <div class="icon-wrapper" style="background: var(--gold-100); color: var(--gold-600); width: 48px; height: 48px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-                  <i data-lucide="trophy" style="width: 24px; height: 24px;"></i>
-                </div>
-                <h3 style="font-size: var(--font-size-lg); color: var(--gold-600); margin-bottom: var(--space-2);">المسابقات والجوائز</h3>
-                <p class="text-muted" style="font-size: var(--font-size-sm); line-height: 1.7; margin-bottom: var(--space-6);">
-                  استكشف نتائج المسابقات والتحديات القرآنية، لوحة الشرف، وقوائم الطلبة المتفوقين والجوائز الممنوحة لتشجيع الحفظ.
-                </p>
-              </div>
-              <a href="#/competitions" class="btn" style="background: var(--gold-500); color: #fff; width: 100%; border: none; font-weight: 600;">
-                <i data-lucide="arrow-left"></i>
-                استكشف المسابقات
-              </a>
-            </div>
-
-            <!-- Students List Card -->
-            <div class="card card-interactive" style="border-top: 4px solid #2563eb; padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <div class="icon-wrapper" style="background: #eff6ff; color: #2563eb; width: 48px; height: 48px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-                  <i data-lucide="users" style="width: 24px; height: 24px;"></i>
-                </div>
-                <h3 style="font-size: var(--font-size-lg); color: #1d4ed8; margin-bottom: var(--space-2);">قائمة الطلبة والمتابعة</h3>
-                <p class="text-muted" style="font-size: var(--font-size-sm); line-height: 1.7; margin-bottom: var(--space-6);">
-                  تصفح بطاقات الطلبة، نسب تقدمهم في حفظ السور القرآنية، تقييم التجويد، والحضور والغياب بشكل شفاف ومباشر.
-                </p>
-              </div>
-              <a href="#/students" class="btn btn-secondary" style="width: 100%;">
-                <i data-lucide="arrow-left"></i>
-                عرض جميع الطلبة
-              </a>
-            </div>
-
-            <!-- Developer & Teacher Card -->
-            <div class="card card-interactive" style="border-top: 4px solid var(--gray-700); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <div class="icon-wrapper" style="background: var(--gray-100); color: var(--gray-700); width: 48px; height: 48px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4);">
-                  <i data-lucide="code-2" style="width: 24px; height: 24px;"></i>
-                </div>
-                <h3 style="font-size: var(--font-size-lg); color: var(--gray-800); margin-bottom: var(--space-2);">عن المطور وأستاذ المدرسة</h3>
-                <p class="text-muted" style="font-size: var(--font-size-sm); line-height: 1.7; margin-bottom: var(--space-6);">
-                  تعرف على الأستاذ ${developer.name}، مطور المنصة وطالب بالمدرسة العليا للإعلام الآلي ESI، ومعلومات التواصل معه.
-                </p>
-              </div>
-              <a href="#/developer" class="btn btn-ghost" style="width: 100%; border: 1px solid var(--border-color); background: #fff;">
-                <i data-lucide="arrow-left"></i>
-                صفحة عن المطور
-              </a>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- Recent Competitions Preview -->
-      ${recentCompetitions.length > 0 ? `
-      <section class="section" style="padding-top: var(--space-12); padding-bottom: var(--space-12);">
+      <!-- Educational Services & Pillars Grid -->
+      <section class="section" style="padding-top: var(--space-4); padding-bottom: var(--space-14);">
         <div class="container">
           <div class="section-header">
-            <h2>آخر المسابقات القرآنية</h2>
-            <p>نتائج أحدث المسابقات والأنشطة والجوائز في المدرسة</p>
+            <h2>الأقسام والخدمات التربوية</h2>
+            <p>منظومة متكاملة تتيح لأولياء الأمور والموجهين متابعة الإنجاز والمسار القرآني لأبنائهم</p>
           </div>
+
+          <div class="services-grid stagger">
+            
+            <!-- Journal Card -->
+            <div class="card card-interactive" style="border-top: 3px solid var(--emerald-800); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div>
+                <div style="width: 48px; height: 48px; border-radius: var(--border-radius-md); background: var(--emerald-50); color: var(--emerald-800); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); border: 1px solid var(--emerald-100);">
+                  <i data-lucide="book-open" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--emerald-950); margin-bottom: var(--space-2);">
+                  يوميات المدرسة والبرنامج
+                </h3>
+                <p style="font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-6);">
+                  متابعة يومية لما تم تلقينه في الحلقات: الآيات المقررة، تطبيقات أحكام التجويد الشفاهية، والواجبات المنزلية والرزنامة الأسبوعية.
+                </p>
+              </div>
+              <a href="#/journal" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <span>تصفح دفتر اليوميات</span>
+                <i data-lucide="arrow-left"></i>
+              </a>
+            </div>
+
+            <!-- Students Card -->
+            <div class="card card-interactive" style="border-top: 3px solid var(--brass-500); padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div>
+                <div style="width: 48px; height: 48px; border-radius: var(--border-radius-md); background: var(--brass-100); color: var(--brass-700); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); border: 1px solid var(--brass-200);">
+                  <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--emerald-950); margin-bottom: var(--space-2);">
+                  سجلات الطلبة والمتابعة
+                </h3>
+                <p style="font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-6);">
+                  الاطلاع على الملف التربوي لكل طالب: نسبة إنجاز الحفظ القرآني، الحضور والغياب، المستوى الدراسي، ونقاط المواظبة المكتسبة.
+                </p>
+              </div>
+              <a href="#/students" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                <span>قائمة طلبة المدرسة</span>
+                <i data-lucide="arrow-left"></i>
+              </a>
+            </div>
+
+            <!-- Leaderboard Card -->
+            <div class="card card-interactive" style="border-top: 3px solid #2b6cb0; padding: var(--space-6); display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+              <div>
+                <div style="width: 48px; height: 48px; border-radius: var(--border-radius-md); background: #eef5fc; color: #2b6cb0; display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-4); border: 1px solid #d5e5f5;">
+                  <i data-lucide="star" style="width: 24px; height: 24px;"></i>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--emerald-950); margin-bottom: var(--space-2);">
+                  لوحة الصدارة والتميز
+                </h3>
+                <p style="font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-6);">
+                  تكريم الطلبة الأكثر انضباطاً وحفظاً وتميزاً في الحلقات القرآنية عبر نظام النقاط التشجيعي التنافسي المعتمد.
+                </p>
+              </div>
+              <a href="#/leaderboard" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                <span>مشاهدة لوحة الصدارة</span>
+                <i data-lucide="arrow-left"></i>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Competitions Spotlight -->
+      ${recentCompetitions.length > 0 ? `
+      <section class="section" style="background: var(--bg-surface); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding-top: var(--space-12); padding-bottom: var(--space-12);">
+        <div class="container">
+          <div class="section-header">
+            <h2>المسابقات والتتويجات القرآنية</h2>
+            <p>تكريم وتتويج المتفوقين في التلاوة والحفظ لتشجيع التنافس في الخيرات</p>
+          </div>
+
           <div class="competitions-grid stagger">
-            ${recentCompetitions.map(comp => {
-              const winners = comp.results || [];
-              return `
-                <div class="competition-card">
-                  <div class="competition-card-header">
-                    <h3>${comp.name}</h3>
-                    <div class="comp-date">
-                      <i data-lucide="calendar"></i>
-                      ${new Date(comp.date).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
+            ${recentCompetitions.map(comp => `
+              <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                <div style="background: linear-gradient(145deg, #12331f, #1a4d2e); color: #ffffff; padding: var(--space-4) var(--space-5); border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span class="badge" style="background: var(--brass-500); color: #1e1706; font-weight: 700; font-size: 10px;">${comp.type || 'مسابقة قرآنية'}</span>
+                    <span style="font-size: 11px; color: var(--brass-200);">${formatDate(comp.date)}</span>
                   </div>
-                  <div class="competition-card-body">
-                    <p class="comp-desc">${comp.description}</p>
-                    <div class="winners-list">
-                      ${winners.slice(0, 3).map(w => {
-                        const student = getStudents().find(s => s.id === w.studentId);
-                        const rankEmoji = w.rank === 1 ? '🏆' : w.rank === 2 ? '🥈' : '🥉';
-                        return `
-                          <div class="winner-item">
-                            <div class="winner-rank">${rankEmoji}</div>
-                            <div>
-                              <div class="winner-name">${student ? `${student.firstName} ${student.lastName}` : 'غير معروف'}</div>
-                              <div style="font-size: var(--font-size-xs); color: var(--text-muted);">${w.prize}</div>
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
+                  <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: #ffffff; margin: 0;">${comp.name}</h3>
+                </div>
+                <div class="card-body" style="display: flex; flex-direction: column; justify-content: space-between; flex: 1;">
+                  ${comp.description ? `<p style="font-size: var(--font-size-xs); color: var(--text-secondary); margin-bottom: var(--space-4); line-height: 1.7;">${comp.description}</p>` : ''}
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-muted); margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--border-subtle);">
+                    <span>المشاركون: <strong>${comp.participants ? comp.participants.length : 0} طالب</strong></span>
+                    <a href="#/competitions" style="color: var(--emerald-800); font-weight: 600;">عرض النتائج &larr;</a>
                   </div>
                 </div>
-              `;
-            }).join('')}
-          </div>
-          <div class="text-center" style="margin-top: var(--space-8);">
-            <a href="#/competitions" class="btn btn-secondary btn-lg">
-              <i data-lucide="trophy"></i>
-              استكشف جميع المسابقات
-            </a>
+              </div>
+            `).join('')}
           </div>
         </div>
       </section>
       ` : ''}
 
-      <!-- Bottom Call To Action Banner -->
-      <section class="section" style="background: var(--green-50); border-top: 1px solid var(--green-100); padding-top: var(--space-12); padding-bottom: var(--space-12);">
-        <div class="container text-center">
-          <h2 style="margin-bottom: var(--space-4); color: var(--green-800);">مرحباً بكم في مدرسة سند للقرآن الكريم وعلومه</h2>
-          <p class="text-muted" style="margin-bottom: var(--space-6); max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.8;">
-            يسعدنا تواصل الأولياء والاطلاع اليومي على مستوى أبنائهم في حفظ كتاب الله، الأحكام، والحضور.
-          </p>
-          <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-            <a href="#/students" class="btn btn-primary btn-lg">
-              <i data-lucide="users"></i>
-              تصفح قائمة الطلبة
-            </a>
-            <a href="#/journal" class="btn btn-secondary btn-lg">
-              <i data-lucide="book-open"></i>
-              اليوميات والبرنامج
-            </a>
-          </div>
-        </div>
-      </section>
     </main>
 
     ${renderFooter()}

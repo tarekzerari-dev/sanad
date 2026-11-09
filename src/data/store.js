@@ -359,7 +359,7 @@ export function addPointEntry(studentId, delta, reason, date = new Date().toISOS
 // === Cloud Synchronization (Netlify Blobs) ===
 const SHARED_CLOUD_URL = '/api/sync';
 
-export async function pushToCloud() {
+export async function pushToCloud(showToastOnError = false) {
   const dataStr = exportAllData();
   try {
     const res = await fetch(SHARED_CLOUD_URL, {
@@ -374,12 +374,16 @@ export async function pushToCloud() {
       console.log('Successfully synced data to Netlify Blobs!');
       return true;
     } else {
-      console.error('Failed to sync to Netlify. Status:', res.status);
-      showToast('⚠️ خطأ في مزامنة البيانات مع السحابة، تأكد من الاتصال بالإنترنت.', 'error');
+      console.warn('Failed to sync to Netlify. Status:', res.status);
+      if (showToastOnError) {
+        showToast('⚠️ تعذر مزامنة البيانات مع السحابة، تأكد من الاتصال بالإنترنت.', 'error');
+      }
     }
   } catch (e) {
-    console.error('Push to cloud failed, using local storage:', e);
-    showToast('⚠️ لم يتم حفظ البيانات في السحابة بسبب انقطاع الاتصال.', 'error');
+    console.warn('Push to cloud failed, using local storage:', e);
+    if (showToastOnError) {
+      showToast('⚠️ لم يتم حفظ البيانات في السحابة بسبب انقطاع الاتصال.', 'error');
+    }
   }
   return false;
 }

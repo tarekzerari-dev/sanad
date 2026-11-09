@@ -2,9 +2,10 @@
 // سند — Main Entry Point
 // ============================
 
+import '@dawod/thmanyah-font-web/index.css';
 import './style.css';
 import { Router } from './utils/router.js';
-import { isAdminLoggedIn, pullFromCloud, getStudents, addStudent, deleteStudent, addPointEntry, pushToCloud, addJournalEntry, setAttendanceForDate, getJournalEntries, updateStudent, addCompetition, getCompetitions } from './data/store.js';
+import { isAdminLoggedIn, pullFromCloud, getStudents, addStudent, deleteStudent, addPointEntry, pushToCloud, addJournalEntry, setAttendanceForDate, getJournalEntries, updateStudent, addCompetition, getCompetitions, getAttendance, getAllPoints } from './data/store.js';
 import { generateId } from './utils/helpers.js';
 import { seedData } from './data/seed.js';
 
@@ -245,31 +246,29 @@ pullFromCloud().then(updated => {
       '2026-08-15', '2026-08-16'
     ];
 
-    import('./data/store.js').then(({ getAttendance, setAttendanceForDate }) => {
-      const attendance = getAttendance();
+    const attendance = getAttendance();
 
-      if (amirId) {
-        amirAbsentDates.forEach(date => {
-          if (attendance[date]) {
-            attendance[date][amirId] = 'absent';
-            setAttendanceForDate(date, attendance[date]);
-          }
-        });
-      }
+    if (amirId) {
+      amirAbsentDates.forEach(date => {
+        if (attendance[date]) {
+          attendance[date][amirId] = 'absent';
+          setAttendanceForDate(date, attendance[date]);
+        }
+      });
+    }
 
-      if (mohamedId) {
-        mohamedAbsentDates.forEach(date => {
-          if (attendance[date]) {
-            attendance[date][mohamedId] = 'absent';
-            setAttendanceForDate(date, attendance[date]);
-          }
-        });
-      }
+    if (mohamedId) {
+      mohamedAbsentDates.forEach(date => {
+        if (attendance[date]) {
+          attendance[date][mohamedId] = 'absent';
+          setAttendanceForDate(date, attendance[date]);
+        }
+      });
+    }
 
-      localStorage.setItem('sanad_migration_4_5', 'true');
-      console.log('Data migration 4.5 completed.');
-      pushToCloud();
-    });
+    localStorage.setItem('sanad_migration_4_5', 'true');
+    console.log('Data migration 4.5 completed.');
+    pushToCloud();
   }
 
   // Migration 4.6: Point adjustments
@@ -302,35 +301,33 @@ pullFromCloud().then(updated => {
 
   // Migration 4.7: Fix points corruption ([object Object])
   if (!localStorage.getItem('sanad_migration_4_7')) {
-    import('./data/store.js').then(({ getAllPoints }) => {
-      const allPoints = getAllPoints();
-      let fixed = false;
-      
-      for (const studentId in allPoints) {
-        const pData = allPoints[studentId];
-        if (typeof pData.total === 'string' && pData.total.includes('[object Object]')) {
-          // Recalculate from history
-          let correctTotal = 0;
-          pData.history.forEach(h => {
-            // Remove the corrupted object from history if it exists
-            if (typeof h.delta === 'object') {
-              h.delta = h.delta.points || 0;
-            }
-            correctTotal += Number(h.delta) || 0;
-          });
-          pData.total = correctTotal;
-          fixed = true;
-        }
+    const allPoints = getAllPoints();
+    let fixed = false;
+    
+    for (const studentId in allPoints) {
+      const pData = allPoints[studentId];
+      if (typeof pData.total === 'string' && pData.total.includes('[object Object]')) {
+        // Recalculate from history
+        let correctTotal = 0;
+        pData.history.forEach(h => {
+          // Remove the corrupted object from history if it exists
+          if (typeof h.delta === 'object') {
+            h.delta = h.delta.points || 0;
+          }
+          correctTotal += Number(h.delta) || 0;
+        });
+        pData.total = correctTotal;
+        fixed = true;
       }
+    }
 
-      if (fixed) {
-        localStorage.setItem('sanad_points', JSON.stringify(allPoints));
-        pushToCloud();
-      }
-      
-      localStorage.setItem('sanad_migration_4_7', 'true');
-      console.log('Data migration 4.7 completed.');
-    });
+    if (fixed) {
+      localStorage.setItem('sanad_points', JSON.stringify(allPoints));
+      pushToCloud();
+    }
+    
+    localStorage.setItem('sanad_migration_4_7', 'true');
+    console.log('Data migration 4.7 completed.');
   }
 
   if (updated) {
